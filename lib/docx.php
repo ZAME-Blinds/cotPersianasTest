@@ -10,6 +10,7 @@ function build_document_meta(array $input)
     return [
         'client_name' => sanitize_document_text($input['cliente'] ?? ''),
         'client_phone' => sanitize_document_text($input['telefono'] ?? ''),
+        'client_address' => sanitize_document_text($input['direccion'] ?? ''),
         'validity' => sanitize_document_text($input['vigencia'] ?? '7 días naturales'),
         'observations' => sanitize_document_text($input['observaciones'] ?? ''),
     ];
@@ -126,11 +127,54 @@ function make_docx_multiline_paragraph(array $lines, $options = [])
     return '<w:p><w:pPr>' . $paragraphStyle . '</w:pPr>' . implode('', $chunks) . '</w:p>';
 }
 
+function make_docx_label_value_paragraph($label, $value, $options = [])
+{
+    $paragraphStyle = '';
+
+    if (!empty($options['spacing_before']) || !empty($options['spacing_after'])) {
+        $paragraphStyle .= '<w:spacing';
+        if (!empty($options['spacing_before'])) {
+            $paragraphStyle .= ' w:before="' . (int) $options['spacing_before'] . '"';
+        }
+        if (!empty($options['spacing_after'])) {
+            $paragraphStyle .= ' w:after="' . (int) $options['spacing_after'] . '"';
+        }
+        $paragraphStyle .= '/>';
+    }
+
+    if (!empty($options['align'])) {
+        $paragraphStyle .= '<w:jc w:val="' . escape_docx($options['align']) . '"/>';
+    }
+
+    $baseRunStyle = '';
+    if (!empty($options['color'])) {
+        $baseRunStyle .= '<w:color w:val="' . escape_docx($options['color']) . '"/>';
+    }
+    if (!empty($options['size'])) {
+        $baseRunStyle .= '<w:sz w:val="' . (int) $options['size'] . '"/><w:szCs w:val="' . (int) $options['size'] . '"/>';
+    }
+
+    $labelRunStyle = '<w:b/>' . $baseRunStyle;
+    $valueRunStyle = $baseRunStyle;
+
+    return '<w:p><w:pPr>' . $paragraphStyle . '</w:pPr>'
+        . '<w:r><w:rPr>' . $labelRunStyle . '</w:rPr><w:t xml:space="preserve">' . escape_docx($label) . '</w:t></w:r>'
+        . '<w:r><w:rPr>' . $valueRunStyle . '</w:rPr><w:t xml:space="preserve">' . escape_docx($value) . '</w:t></w:r>'
+        . '</w:p>';
+}
+
 function make_docx_table($rows, $options = [])
 {
     $width = isset($options['width']) ? (int) $options['width'] : 9000;
     $borders = $options['borders'] ?? true;
+    $cellMargin = $options['cell_margin'] ?? 90;
     $tableStyle = '<w:tblW w:w="' . $width . '" w:type="dxa"/>';
+    $tableStyle .= '<w:tblCellMar>'
+        . '<w:top w:w="' . (int) $cellMargin . '" w:type="dxa"/>'
+        . '<w:left w:w="' . (int) $cellMargin . '" w:type="dxa"/>'
+        . '<w:bottom w:w="' . (int) $cellMargin . '" w:type="dxa"/>'
+        . '<w:right w:w="' . (int) $cellMargin . '" w:type="dxa"/>'
+        . '</w:tblCellMar>';
 
     if ($borders) {
         $tableStyle .= '<w:tblBorders>'
@@ -151,8 +195,9 @@ function make_docx_table_cell($contentXml, $options = [])
     $width = isset($options['width']) ? (int) $options['width'] : 1800;
     $background = !empty($options['background']) ? '<w:shd w:val="clear" w:color="auto" w:fill="' . escape_docx($options['background']) . '"/>' : '';
     $vAlign = !empty($options['valign']) ? '<w:vAlign w:val="' . escape_docx($options['valign']) . '"/>' : '<w:vAlign w:val="top"/>';
+    $gridSpan = !empty($options['grid_span']) ? '<w:gridSpan w:val="' . (int) $options['grid_span'] . '"/>' : '';
 
-    return '<w:tc><w:tcPr><w:tcW w:w="' . $width . '" w:type="dxa"/>' . $background . $vAlign . '</w:tcPr>' . $contentXml . '</w:tc>';
+    return '<w:tc><w:tcPr><w:tcW w:w="' . $width . '" w:type="dxa"/>' . $gridSpan . $background . $vAlign . '</w:tcPr>' . $contentXml . '</w:tc>';
 }
 
 function make_docx_table_row($cells, $options = [])
@@ -178,14 +223,14 @@ function make_docx_inline_image($relationshipId)
     return '<w:p>'
         . '<w:r><w:drawing>'
         . '<wp:inline distT="0" distB="0" distL="0" distR="0" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">'
-        . '<wp:extent cx="2200000" cy="620000"/>'
+        . '<wp:extent cx="2500000" cy="700000"/>'
         . '<wp:docPr id="1" name="ZAME Logo"/>'
         . '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
         . '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
         . '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">'
-        . '<pic:nvPicPr><pic:cNvPr id="0" name="Logo_zame_1.png"/><pic:cNvPicPr/></pic:nvPicPr>'
+        . '<pic:nvPicPr><pic:cNvPr id="0" name="Logo_zame_2.png"/><pic:cNvPicPr/></pic:nvPicPr>'
         . '<pic:blipFill><a:blip r:embed="' . escape_docx($relationshipId) . '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
-        . '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="2200000" cy="620000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>'
+        . '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="2500000" cy="700000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>'
         . '</pic:pic></a:graphicData></a:graphic>'
         . '</wp:inline></w:drawing></w:r></w:p>';
 }
@@ -207,9 +252,6 @@ function build_quote_item_description(array $item)
         $lines[] = 'Incluye control: ' . $item['control_name'] . '.';
     }
 
-    $lines[] = 'Medidas de referencia: ' . format_money($item['width']) . ' m × ' . format_money($item['height']) . ' m.';
-    $lines[] = 'Área cobrable estimada: ' . format_money($item['area']) . ' m².';
-
     return $lines;
 }
 
@@ -218,45 +260,54 @@ function build_quote_docx_xml(array $document)
     $meta = $document['meta'];
     $items = $document['items'];
     $company = $document['company'];
-    $headerLeft = !empty($document['logo_relationship_id'])
-        ? make_docx_inline_image($document['logo_relationship_id'])
-        : make_docx_paragraph($company['name'], ['bold' => true, 'size' => 28]);
+    $clientAddress = $meta['client_address'] !== '' ? $meta['client_address'] : 'Por definir.';
+    $headerLeft = implode('', [
+        make_docx_paragraph('Datos del cliente', ['bold' => true, 'color' => '334E68', 'spacing_after' => 40]),
+        make_docx_label_value_paragraph('Cliente: ', $meta['client_name'], ['spacing_after' => 20]),
+        make_docx_label_value_paragraph('Teléfono / WhatsApp: ', $meta['client_phone'], ['spacing_after' => 20]),
+        make_docx_label_value_paragraph('Dirección: ', $clientAddress),
+    ]);
 
     $headerRight = implode('', [
-        make_docx_paragraph('Folio: ' . $document['folio'], ['bold' => true, 'size' => 24, 'spacing_after' => 30]),
-        make_docx_paragraph('Fecha: ' . $document['date'], ['spacing_after' => 20]),
-        make_docx_paragraph('Atención: ' . $meta['client_name'], ['spacing_after' => 20]),
-        make_docx_paragraph('Tel/WhatsApp: ' . $meta['client_phone'], ['spacing_after' => 20]),
-        make_docx_paragraph('Email: ' . $company['email'], ['spacing_after' => 20]),
-        make_docx_paragraph('Domicilio: ' . $company['address']),
+        make_docx_paragraph('Datos de cotización', ['bold' => true, 'color' => '334E68', 'spacing_after' => 40]),
+        make_docx_label_value_paragraph('Folio: ', $document['folio'], ['spacing_after' => 20]),
+        make_docx_label_value_paragraph('Fecha: ', $document['date'], ['spacing_after' => 80]),
+        make_docx_paragraph('DATOS DE CONTACTO', ['bold' => true, 'color' => '334E68', 'spacing_after' => 40]),
+        make_docx_label_value_paragraph('Asesor: ', 'Elizabeth Orozco', ['spacing_after' => 20]),
+        make_docx_label_value_paragraph('WhatsApp Oficina: ', '477-173-8901', ['spacing_after' => 20]),
+        make_docx_label_value_paragraph('Correo: ', 'zame.motorizacion@gmail.com / ' . $company['email'], ['spacing_after' => 20]),
+        make_docx_label_value_paragraph('Sitio: ', $company['website']),
     ]);
 
     $headerTable = make_docx_table([
         make_docx_table_row([
-            ['content' => $headerLeft, 'options' => ['width' => 3200, 'valign' => 'center']],
-            ['content' => $headerRight, 'options' => ['width' => 5800]],
+            ['content' => $headerLeft, 'options' => ['width' => 5000, 'valign' => 'top']],
+            ['content' => $headerRight, 'options' => ['width' => 4000, 'valign' => 'top']],
         ]),
-    ], ['width' => 9000]);
+    ], ['width' => 9000, 'borders' => true, 'cell_margin' => 120]);
 
     $quoteRows = [];
     $quoteRows[] = make_docx_table_row([
-        ['content' => make_docx_paragraph('Cant.', ['bold' => true, 'color' => 'FFFFFF', 'align' => 'center']), 'options' => ['width' => 900]],
-        ['content' => make_docx_paragraph('Descripción', ['bold' => true, 'color' => 'FFFFFF']), 'options' => ['width' => 5900]],
-        ['content' => make_docx_paragraph('Precio', ['bold' => true, 'color' => 'FFFFFF', 'align' => 'center']), 'options' => ['width' => 2200]],
+        ['content' => make_docx_paragraph('Cantidad', ['bold' => true, 'color' => 'FFFFFF', 'align' => 'center']), 'options' => ['width' => 900]],
+        ['content' => make_docx_paragraph('Descripción', ['bold' => true, 'color' => 'FFFFFF']), 'options' => ['width' => 4500]],
+        ['content' => make_docx_paragraph('Precio', ['bold' => true, 'color' => 'FFFFFF', 'align' => 'center']), 'options' => ['width' => 1800]],
+        ['content' => make_docx_paragraph('Observaciones', ['bold' => true, 'color' => 'FFFFFF']), 'options' => ['width' => 1800]],
     ], ['header' => true]);
 
     foreach ($items as $item) {
         $quoteRows[] = make_docx_table_row([
             ['content' => make_docx_paragraph('1', ['align' => 'center', 'spacing_after' => 0]), 'options' => ['width' => 900, 'valign' => 'center']],
-            ['content' => make_docx_multiline_paragraph(build_quote_item_description($item), ['spacing_after' => 0]), 'options' => ['width' => 5900]],
-            ['content' => make_docx_paragraph('$' . format_money($item['total_price']), ['align' => 'center', 'bold' => true]), 'options' => ['width' => 2200, 'valign' => 'center']],
+            ['content' => make_docx_multiline_paragraph(build_quote_item_description($item), ['spacing_after' => 0]), 'options' => ['width' => 4500]],
+            ['content' => make_docx_paragraph('$' . format_money($item['total_price']), ['align' => 'center', 'bold' => true]), 'options' => ['width' => 1800, 'valign' => 'center']],
+            ['content' => make_docx_paragraph('', ['spacing_after' => 0]), 'options' => ['width' => 1800]],
         ]);
     }
 
     $quoteRows[] = make_docx_table_row([
         ['content' => make_docx_paragraph('', ['spacing_after' => 0]), 'options' => ['width' => 900, 'background' => 'F9FAFB']],
-        ['content' => make_docx_paragraph('TOTAL', ['bold' => true, 'align' => 'right']), 'options' => ['width' => 5900, 'background' => 'F9FAFB']],
-        ['content' => make_docx_paragraph('$' . format_money($document['total']), ['bold' => true, 'align' => 'center']), 'options' => ['width' => 2200, 'background' => 'F9FAFB']],
+        ['content' => make_docx_paragraph('TOTAL', ['bold' => true, 'align' => 'right']), 'options' => ['width' => 4500, 'background' => 'F9FAFB']],
+        ['content' => make_docx_paragraph('$' . format_money($document['total']), ['bold' => true, 'align' => 'center']), 'options' => ['width' => 1800, 'background' => 'F9FAFB']],
+        ['content' => make_docx_paragraph('', ['spacing_after' => 0]), 'options' => ['width' => 1800, 'background' => 'F9FAFB']],
     ]);
 
     $quoteTable = make_docx_table($quoteRows, ['width' => 9000]);
@@ -279,7 +330,7 @@ function build_quote_docx_xml(array $document)
             ['content' => make_docx_paragraph('Formas de pago', ['bold' => true, 'color' => 'C6A15B', 'spacing_after' => 40]) . make_docx_multiline_paragraph($paymentLines), 'options' => ['width' => 9000]],
         ]),
         make_docx_table_row([
-            ['content' => make_docx_paragraph('Importante', ['bold' => true, 'color' => 'C6A15B', 'spacing_after' => 40]) . make_docx_multiline_paragraph($importantLines) . make_docx_paragraph('Vigencia comercial: ' . $meta['validity'], ['spacing_before' => 60]) . make_docx_paragraph('Observaciones: ' . ($meta['observations'] !== '' ? $meta['observations'] : 'Sin observaciones adicionales.')), 'options' => ['width' => 9000]],
+            ['content' => make_docx_paragraph('Importante', ['bold' => true, 'color' => 'C6A15B', 'spacing_after' => 40]) . make_docx_multiline_paragraph($importantLines), 'options' => ['width' => 9000]],
         ]),
     ], ['width' => 9000]);
 
@@ -303,9 +354,13 @@ function build_quote_docx_xml(array $document)
         . 'xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" '
         . 'mc:Ignorable="w14 wp14">'
         . '<w:body>'
+        . (!empty($document['logo_relationship_id'])
+            ? make_docx_inline_image($document['logo_relationship_id'])
+            : make_docx_paragraph($company['name'], ['bold' => true, 'size' => 28]))
+        . make_docx_paragraph('', ['spacing_after' => 80])
         . $headerTable
-        . make_docx_paragraph('', ['spacing_after' => 90])
-        . make_docx_multiline_paragraph($company['intro_text'], ['spacing_after' => 200])
+        . make_docx_paragraph('', ['spacing_after' => 120])
+        . make_docx_paragraph($company['intro_text'][0] ?? 'Encontrará a continuación el presupuesto solicitado. Quedamos a sus órdenes para cualquier aclaración.', ['spacing_after' => 200])
         . $quoteTable
         . make_docx_paragraph('', ['spacing_after' => 140])
         . $conditionsTable
@@ -388,8 +443,8 @@ function build_quote_docx_file(array $document, $outputFile)
 
     $documentRelationships = [];
     if ($logoRelationshipId !== null) {
-        $documentRelationships[] = '<Relationship Id="' . $logoRelationshipId . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/Logo_zame_1.png"/>';
-        $zip->addFile($document['company']['logo_path'], 'word/media/Logo_zame_1.png');
+        $documentRelationships[] = '<Relationship Id="' . $logoRelationshipId . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/Logo_zame_2.png"/>';
+        $zip->addFile($document['company']['logo_path'], 'word/media/Logo_zame_2.png');
     }
 
     $zip->addFromString('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
