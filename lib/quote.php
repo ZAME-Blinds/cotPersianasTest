@@ -62,25 +62,27 @@ function get_quote_summary(array $items)
     ];
 }
 
-function build_quote_from_input(array $input, array $catalog)
+function build_quote_from_input(array $input, array $catalog, array $typeMap, array $modelMap)
 {
     $rules = $catalog['measurement_rules'];
     $precision = $rules['precision'];
     $errors = [];
 
-    $type = trim($input['tipo'] ?? '');
-    $modelName = trim($input['modelo'] ?? '');
+    $typeId = trim($input['tipo'] ?? '');
+    $modelId = trim($input['modelo'] ?? '');
     $operation = trim($input['accionamiento'] ?? '');
     $motorCode = trim($input['motor'] ?? '');
     $controlCode = trim($input['control'] ?? 'none');
     $widthInput = trim($input['ancho'] ?? '');
     $heightInput = trim($input['alto'] ?? '');
 
-    if ($type === '' || !in_array($type, get_blind_types($catalog), true)) {
+    $selectedType = $typeMap[$typeId] ?? null;
+
+    if (!$selectedType) {
         $errors[] = 'Selecciona un tipo de persiana válido.';
     }
 
-    $model = $type !== '' ? find_model_for_type($catalog, $type, $modelName) : null;
+    $model = $modelMap[$modelId] ?? null;
 
     if (!$model) {
         $errors[] = 'Selecciona una tela/modelo compatible.';
@@ -107,13 +109,13 @@ function build_quote_from_input(array $input, array $catalog)
         $maxWidth = $rules['max_capture_width'];
         $maxHeight = $rules['max_capture_height'];
 
-        if ($type === 'Pertina') {
+        if ($selectedType && $selectedType['name'] === 'Pertina') {
             $maxWidth = 5.00;
             $maxHeight = 4.00;
         }
 
         if ($width > $maxWidth) {
-            if ($model && $width > $model['max_width']) {
+            if ($model && $model['max_width'] !== null && $width > $model['max_width']) {
                 $errors[] = 'El ancho insertado supera el ancho de rollo. Analiza alternativas para el cliente.';
             } else {
                 $errors[] = 'El ancho excede el máximo permitido para esta fase.';
@@ -124,7 +126,7 @@ function build_quote_from_input(array $input, array $catalog)
             $errors[] = 'El alto excede el máximo permitido para esta fase.';
         }
 
-        if ($model && $width > $model['max_width']) {
+        if ($model && $model['max_width'] !== null && $width > $model['max_width']) {
             $errors[] = 'El ancho insertado supera el ancho de rollo. Analiza alternativas para el cliente.';
         }
 
@@ -137,7 +139,7 @@ function build_quote_from_input(array $input, array $catalog)
     $control = null;
 
     if ($operation === 'Motorizado') {
-        $motor = find_motor($catalog, $type, $motorCode);
+        $motor = find_motor($catalog, $selectedType['name'] ?? '', $motorCode);
 
         if (!$motor) {
             $errors[] = 'Selecciona un motor compatible.';
@@ -191,7 +193,7 @@ function build_quote_from_input(array $input, array $catalog)
     return [
         'errors' => [],
         'quote' => [
-            'type' => $type,
+            'type' => $selectedType['name'],
             'model' => $model['name'],
             'color' => 'Por definir',
             'operation' => $operation,

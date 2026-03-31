@@ -4,11 +4,22 @@ require __DIR__ . '/includes/bootstrap.php';
 
 require_login();
 
-$types = get_blind_types($catalog);
 $operationModes = get_operation_modes($catalog);
 $items = get_quote_items();
 $summary = get_quote_summary($items);
 $storedMeta = get_quote_meta();
+
+$dbError = '';
+$types = [];
+$typeMap = [];
+
+try {
+    $pdo = get_pdo_connection();
+    $types = get_blind_product_types($pdo, 1);
+    $typeMap = get_type_map($types);
+} catch (Throwable $exception) {
+    $dbError = 'No se pudo cargar el catálogo de persianas desde la base de datos.';
+}
 
 $formData = [
     'cliente' => $storedMeta['cliente'],
@@ -32,6 +43,7 @@ $messages = [
 ];
 $currentQuote = null;
 $action = '';
+$modelMap = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formData['cliente'] = trim($_POST['cliente'] ?? $formData['cliente']);
@@ -59,7 +71,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'refresh') {
         $messages['info'] = 'Se actualizaron las opciones compatibles según la selección actual.';
     } elseif ($action === 'quote_single' || $action === 'add_piece' || $action === 'download_single') {
-        $quoteResult = build_quote_from_input($formData, $catalog);
+        $selectedTypeForPost = $typeMap[$formData['tipo']] ?? null;
+
+        if ($selectedTypeForPost) {
+            try {
+                $modelMap = get_fabric_map(get_active_fabrics_by_product_type($pdo, $selectedTypeForPost['id']));
+            } catch (Throwable $exception) {
+                $dbError = 'No se pudieron cargar las telas desde la base de datos.';
+            }
+        }
+
+        $quoteResult = build_quote_from_input($formData, $catalog, $typeMap, $modelMap);
         $messages['errors'] = $quoteResult['errors'];
         $currentQuote = $quoteResult['quote'];
 
@@ -104,12 +126,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$models = get_models_for_type($catalog, $formData['tipo']);
-if ($formData['modelo'] !== '' && !isset($models[$formData['modelo']])) {
+$selectedType = $typeMap[$formData['tipo']] ?? null;
+$models = [];
+$modelMap = [];
+
+if ($selectedType) {
+    try {
+        $models = get_active_fabrics_by_product_type($pdo, $selectedType['id']);
+        $modelMap = get_fabric_map($models);
+    } catch (Throwable $exception) {
+        $dbError = 'No se pudieron cargar las telas desde la base de datos.';
+    }
+}
+
+if ($formData['modelo'] !== '' && !isset($modelMap[$formData['modelo']])) {
     $formData['modelo'] = '';
 }
 
-$motors = get_motors_for_type($catalog, $formData['tipo']);
+$motors = get_motors_for_type($catalog, $selectedType['name'] ?? '');
 if ($formData['motor'] !== '' && !isset($motors[$formData['motor']])) {
     $formData['motor'] = '';
 }
@@ -120,7 +154,7 @@ if ($formData['control'] !== '' && $formData['control'] !== 'none' && !isset($co
     $formData['control'] = 'none';
 }
 
-$typeNote = get_type_note($catalog, $formData['tipo']);
+$typeNote = get_type_note($catalog, $selectedType['name'] ?? '');
 $disableQuoteAll = $summary['count'] <= 2;
 
 render_header('Cotizador de persianas - Fase 3');
@@ -149,6 +183,10 @@ render_header('Cotizador de persianas - Fase 3');
 
     <?php if ($messages['info'] !== ''): ?>
         <div class="message message-info"><?php echo htmlspecialchars($messages['info'], ENT_QUOTES, 'UTF-8'); ?></div>
+    <?php endif; ?>
+
+    <?php if ($dbError !== ''): ?>
+        <div class="message message-error"><?php echo htmlspecialchars($dbError, ENT_QUOTES, 'UTF-8'); ?></div>
     <?php endif; ?>
 
     <?php if ($typeNote !== ''): ?>
@@ -199,22 +237,23 @@ render_header('Cotizador de persianas - Fase 3');
             <div class="form-grid columns-2 columns-4">
                 <div>
                     <label for="tipo">Tipo de persiana</label>
-                    <select id="tipo" name="tipo" onchange="document.getElementById('form_action').value='refresh'; this.form.submit();">
+                    <select id="tipo" name="tipo">
                         <option value="">Selecciona una opción</option>
                         <?php foreach ($types as $type): ?>
-                            <option value="<?php echo htmlspecialchars($type, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $formData['tipo'] === $type ? 'selected' : ''; ?>><?php echo htmlspecialchars($type, ENT_QUOTES, 'UTF-8'); ?></option>
+                            <option value="<?php echo htmlspecialchars((string) $type['id'], ENT_QUOTES, 'UTF-8'); ?>" <?php echo $formData['tipo'] === (string) $type['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($type['name'], ENT_QUOTES, 'UTF-8'); ?></option>
                         <?php endforeach; ?>
                     </select>
                     <noscript><button type="submit" class="button button-secondary inline-button" onclick="document.getElementById('form_action').value='refresh';">Actualizar modelos</button></noscript>
                 </div>
                 <div>
                     <label for="modelo">Tela / modelo</label>
-                    <select id="modelo" name="modelo">
-                        <option value="">Selecciona una opción</option>
+                    <select id="modelo" name="modelo" <?php echo empty($models) ? 'disabled' : ''; ?>>
+                        <option value=""><?php echo empty($models) ? 'Selecciona primero un tipo de persiana' : 'Selecciona una opción'; ?></option>
                         <?php foreach ($models as $model): ?>
-                            <option value="<?php echo htmlspecialchars($model['name'], ENT_QUOTES, 'UTF-8'); ?>" <?php echo $formData['modelo'] === $model['name'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($model['name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <option value="<?php echo htmlspecialchars((string) $model['fabric_model_id'], ENT_QUOTES, 'UTF-8'); ?>" data-price="<?php echo htmlspecialchars((string) $model['price_value'], ENT_QUOTES, 'UTF-8'); ?>" <?php echo $formData['modelo'] === (string) $model['fabric_model_id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($model['name'], ENT_QUOTES, 'UTF-8'); ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <input type="hidden" id="model_price_value" name="model_price_value" value="">
                 </div>
                 <div>
                     <label for="accionamiento">Accionamiento</label>
@@ -362,4 +401,77 @@ render_header('Cotizador de persianas - Fase 3');
         </div>
     <?php endif; ?>
 </section>
+<script>
+(function () {
+    const typeSelect = document.getElementById('tipo');
+    const modelSelect = document.getElementById('modelo');
+    const priceInput = document.getElementById('model_price_value');
+
+    if (!typeSelect || !modelSelect || !priceInput) {
+        return;
+    }
+
+    const syncPrice = () => {
+        const selected = modelSelect.options[modelSelect.selectedIndex];
+        priceInput.value = selected && selected.dataset.price ? selected.dataset.price : '';
+    };
+
+    const populateModels = (items, selectedModelId) => {
+        modelSelect.innerHTML = '';
+
+        if (!items.length) {
+            modelSelect.disabled = true;
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No hay telas activas para este tipo';
+            modelSelect.appendChild(option);
+            syncPrice();
+            return;
+        }
+
+        modelSelect.disabled = false;
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Selecciona una opción';
+        modelSelect.appendChild(placeholder);
+
+        items.forEach((item) => {
+            const option = document.createElement('option');
+            option.value = String(item.id);
+            option.textContent = item.name;
+            option.dataset.price = String(item.price_value);
+            if (String(item.id) === String(selectedModelId)) {
+                option.selected = true;
+            }
+            modelSelect.appendChild(option);
+        });
+
+        syncPrice();
+    };
+
+    const loadModels = async (typeId, selectedModelId = '') => {
+        if (!typeId) {
+            populateModels([], '');
+            return;
+        }
+
+        try {
+            const response = await fetch(`api/fabrics.php?product_type_id=${encodeURIComponent(typeId)}`, {
+                headers: { 'Accept': 'application/json' }
+            });
+            const payload = await response.json();
+            populateModels(payload.ok && Array.isArray(payload.items) ? payload.items : [], selectedModelId);
+        } catch (error) {
+            populateModels([], '');
+        }
+    };
+
+    typeSelect.addEventListener('change', () => {
+        loadModels(typeSelect.value, '');
+    });
+
+    modelSelect.addEventListener('change', syncPrice);
+    syncPrice();
+})();
+</script>
 <?php render_footer(); ?>

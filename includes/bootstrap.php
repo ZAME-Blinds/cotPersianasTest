@@ -11,6 +11,8 @@ $company = require __DIR__ . '/../config/company.php';
 require_once __DIR__ . '/../lib/auth.php';
 require_once __DIR__ . '/../lib/view.php';
 require_once __DIR__ . '/../lib/catalog.php';
+require_once __DIR__ . '/../lib/db.php';
+require_once __DIR__ . '/../lib/blinds_repository.php';
 require_once __DIR__ . '/../lib/quote.php';
 require_once __DIR__ . '/../lib/counter.php';
 require_once __DIR__ . '/../lib/docx.php';
