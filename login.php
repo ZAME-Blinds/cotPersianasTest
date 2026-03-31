@@ -23,8 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 }
-
-render_header('Acceso al cotizador');
 ?>
 <div class="login-stage">
     <section class="panel login-panel">
