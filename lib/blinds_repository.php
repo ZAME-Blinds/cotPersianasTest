@@ -2,7 +2,13 @@
 
 function get_blind_product_types(PDO $pdo, $productId = 1)
 {
-    $stmt = $pdo->prepare('SELECT id, name FROM product_types WHERE product_id = :product_id ORDER BY name ASC');
+    $stmt = $pdo->prepare(
+        'SELECT id, name
+        FROM product_types
+        WHERE product_id = :product_id
+          AND is_active = 1
+        ORDER BY name ASC'
+    );
     $stmt->execute(['product_id' => (int) $productId]);
 
     return $stmt->fetchAll();
