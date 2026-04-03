@@ -454,6 +454,23 @@ tfoot td {
     background: #dfbb4a;
 }
 
+.quick-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.quick-link-button {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+}
+
+.quick-links-footnote {
+    margin-top: 16px;
+}
+
 .login-message {
     margin-bottom: 16px;
     background: rgba(127, 29, 29, 0.22);

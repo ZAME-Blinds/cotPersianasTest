@@ -32,7 +32,7 @@ render_header('Acceso corporativo', [
 <div class="login-stage">
     <section class="panel login-panel">
         <div class="login-brand-block">
-            <img src="assets/img/Logo_zame_2.png" alt="ZAME Blinds" class="brand-logo login-brand-logo">
+            <img src="assets/img/Logo_zame_1.png" alt="ZAME Blinds" class="brand-logo login-brand-logo">
             <h2 class="login-title">Cotizador interno ZAME Blinds</h2>
             <p class="login-subtitle">Acceso corporativo</p>
         </div>
@@ -54,6 +54,14 @@ render_header('Acceso corporativo', [
                 <button type="submit" class="button login-button">Ingresar</button>
             </div>
         </form>
+
+        <div class="quick-links">
+            <a class="button login-button quick-link-button" href="https://zame-blinds.com.mx/persianas/" target="_blank" rel="noopener noreferrer">Persianas</a>
+            <a class="button login-button quick-link-button" href="https://zame-blinds.com.mx/cortinas-decorativas/" target="_blank" rel="noopener noreferrer">Cortinas</a>
+            <a class="button login-button quick-link-button" href="https://zame-blinds.com.mx/toldos-vertical-y-retractil/" target="_blank" rel="noopener noreferrer">Toldos</a>
+            <a class="button login-button quick-link-button" href="https://zame-blinds.com.mx/decoracion-inteligente/" target="_blank" rel="noopener noreferrer">Decoración inteligente</a>
+            <p class="login-footnote quick-links-footnote">Cotizaciones - 477-173-8901</p>
+        </div>
 
         <p class="login-footnote">Desarrollo ZAME Blinds - Ingeniería</p>
     </section>
