@@ -465,6 +465,17 @@ tfoot td {
     display: block;
     text-align: center;
     text-decoration: none;
+    background: rgba(31, 41, 55, 0.92);
+    color: #e5e7eb;
+    border: 1px solid #374151;
+    box-shadow: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quick-link-button:hover {
+    background: rgba(55, 65, 81, 0.96);
+    color: #e5e7eb;
+    border-color: #4b5563;
 }
 
 .quick-links-footnote {
