@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
     color-scheme: light;
     --bg: #f4f7fb;
@@ -337,160 +339,182 @@ tfoot td {
     font-weight: bold;
 }
 
-/* Login redesign */
+/* Login refinements */
 .login-page {
+    font-family: "Inter", Arial, Helvetica, sans-serif;
+    background: #0f172a;
+    color: #e5e7eb;
+}
+
+.page-shell-login {
     min-height: 100vh;
-    font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
-    background: linear-gradient(145deg, #f5f7fb 0%, #ecf1f8 55%, #e8effa 100%);
-    color: #1f2a37;
+    max-width: none;
+    padding: 0;
 }
 
-.login-layout {
+.content-card-login {
     min-height: 100vh;
-    display: grid;
-    place-items: center;
-    padding: 24px;
+    padding: 24px 16px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
 
-.login-card {
-    width: min(100%, 470px);
-    background: #ffffff;
-    border-radius: 18px;
-    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.14);
-    border: 1px solid #e5eaf1;
-    padding: 34px 30px 24px;
+.login-stage {
+    min-height: calc(100vh - 48px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 0;
 }
 
-.login-brand {
+.login-panel {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 32px;
+    border-radius: 16px;
+    border: 1px solid rgba(156, 163, 175, 0.18);
+    box-shadow: 0 20px 45px rgba(2, 6, 23, 0.35);
+    background: #111827;
+}
+
+.login-brand-block {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
-.login-logo {
-    width: min(210px, 60%);
-    height: auto;
-    object-fit: contain;
-    margin-bottom: 14px;
+.login-brand-logo {
+    width: min(120px, 100%);
+    margin: 0 auto 16px;
 }
 
-.login-brand h1 {
+.login-title {
+    margin: 0 0 8px;
+    color: #e5e7eb;
+    font-size: 24px;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+}
+
+.login-subtitle {
     margin: 0;
-    font-size: clamp(1.2rem, 1.55vw, 1.45rem);
-    font-weight: 700;
-    color: #27364b;
-    letter-spacing: 0.01em;
+    color: #9ca3af;
+    font-size: 14px;
 }
 
 .login-form {
-    gap: 14px;
+    gap: 16px;
 }
 
 .login-form label {
-    margin-bottom: 7px;
+    font-weight: 500;
     font-size: 14px;
-    color: #3b4f67;
-    font-weight: 600;
+    color: #e5e7eb;
+    margin-bottom: 8px;
 }
 
-.input-field {
-    position: relative;
-}
-
-.input-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 18px;
-    height: 18px;
-    color: #7a8798;
-    pointer-events: none;
-}
-
-.input-icon svg {
-    width: 100%;
-    height: 100%;
-    fill: currentColor;
-}
-
-.login-form input {
-    height: 50px;
-    padding: 12px 14px 12px 42px;
-    border-radius: 12px;
-    border: 1px solid #d6ddea;
-    background: #fbfcfe;
-    color: #182130;
+.login-input {
+    border: 1px solid rgba(156, 163, 175, 0.28);
+    border-radius: 16px;
+    background: #0f172a;
+    color: #e5e7eb;
+    padding: 14px 16px;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
-.login-form input:hover {
-    border-color: #b8c5d8;
-    background: #ffffff;
+.login-input::placeholder {
+    color: #6b7280;
 }
 
-.login-form input:focus {
+.login-input:focus {
     outline: none;
-    border-color: #5b7aa6;
-    box-shadow: 0 0 0 4px rgba(91, 122, 166, 0.16);
-    background: #ffffff;
+    border-color: #d4af37;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.14);
+    background: #111b30;
 }
 
 .login-actions {
-    justify-content: center;
-    margin-top: 8px;
+    margin-top: 4px;
 }
 
 .login-button {
-    min-width: 170px;
-    height: 50px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #2f4f77 0%, #3d648f 60%, #bf9b55 100%);
+    width: 100%;
+    border-radius: 16px;
+    padding: 14px 22px;
+    background: #d4af37;
+    color: #111827;
     font-weight: 600;
-    letter-spacing: 0.02em;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .login-button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 10px 24px rgba(43, 67, 100, 0.26);
-    filter: brightness(1.03);
+    box-shadow: 0 10px 22px rgba(212, 175, 55, 0.2);
+    background: #dfbb4a;
+}
+
+.quick-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.quick-link-button {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    background: rgba(31, 41, 55, 0.92);
+    color: #e5e7eb;
+    border: 1px solid #374151;
+    box-shadow: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quick-link-button:hover {
+    background: rgba(55, 65, 81, 0.96);
+    color: #e5e7eb;
+    border-color: #4b5563;
+}
+
+.quick-links-footnote {
+    margin-top: 16px;
 }
 
 .login-message {
     margin-bottom: 16px;
-    border-radius: 10px;
-    padding: 12px 14px;
-    font-size: 14px;
+    background: rgba(127, 29, 29, 0.22);
+    color: #fca5a5;
+    border-color: rgba(248, 113, 113, 0.28);
 }
 
 .login-footnote {
-    margin: 18px 0 0;
+    margin: 16px 0 0;
     text-align: center;
+    color: #9ca3af;
     font-size: 12px;
-    color: #7b8797;
-    letter-spacing: 0.01em;
 }
 
-@media (max-width: 560px) {
-    .login-layout {
+@media (max-width: 720px) {
+    .page-shell {
+        padding: 20px 12px;
+    }
+
+    .content-card {
+        padding: 14px;
+    }
+
+    .content-card-login {
+        min-height: 100vh;
         padding: 16px;
     }
 
-    .login-card {
-        padding: 26px 18px 20px;
-        border-radius: 16px;
+    .login-panel {
+        padding: 28px 24px;
     }
 
-    .login-brand {
-        margin-bottom: 20px;
-    }
-
-    .login-logo {
-        width: min(190px, 62%);
-    }
-
-    .login-button {
-        width: 100%;
-        min-width: 0;
+    .login-title {
+        font-size: 22px;
     }
 }
