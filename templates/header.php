@@ -7,8 +7,9 @@
     <title><?php echo htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8'); ?></title>
     <link rel="stylesheet" href="assets/styles.css">
 </head>
-<body>
-    <div class="page-shell">
+<body<?php echo $bodyClass !== '' ? ' class="' . htmlspecialchars($bodyClass, ENT_QUOTES, 'UTF-8') . '"' : ''; ?>>
+    <div class="page-shell<?php echo $hideHeader ? ' page-shell-login' : ''; ?>">
+        <?php if (!$hideHeader): ?>
         <header class="site-header">
             <div class="brand-wrap">
                 <a class="brand-link" href="index.php" aria-label="Ir al inicio de ZAME Blinds">
@@ -26,4 +27,5 @@
                 </div>
             <?php endif; ?>
         </header>
-        <main class="content-card">
+        <?php endif; ?>
+        <main class="content-card<?php echo $hideHeader ? ' content-card-login' : ''; ?>">
